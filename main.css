@@ -1,0 +1,84 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#slots {
+  width: 660px;
+  margin: 50px auto;
+  padding: 20px;
+  overflow: hidden;
+  background: #333;
+  border-radius: 10px;
+  position: relative;
+}
+
+#slots > div {
+  float: left;
+  width: 200px;
+  margin: 10px;
+  height: 360px;
+  background: #FFF;
+  background: linear-gradient(darkgray, white, white, white, darkgray);
+  border-radius: 5px;
+  box-shadow: 0 0 5px #000 inset;
+  text-align: center;
+  line-height: 80px;
+  position: relative;
+}
+
+#bag1, #bag2, #bag3 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -3805px;
+}
+
+#multi {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  top: 40%;
+  font-weight: 900;
+  color: #333;
+  font-size: 0;
+}
+
+#wrapp {
+  position: relative;
+  height: 150px;
+}
+
+button {
+  padding: 0;
+  height: 140px;
+  width: 140px;
+  display: block;
+  border-radius: 50%;
+  user-select: none;
+  cursor: pointer;
+  background: white;
+  position: absolute;
+  left: 50%;
+  margin-left: -64px;
+}
+
+button:focus {
+  outline: none;
+}
+
+.spin {
+  animation-name: spin;
+  animation-duration: 700ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

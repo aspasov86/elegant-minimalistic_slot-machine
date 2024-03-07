@@ -3,7 +3,7 @@ body {
 }
 
 #slots {
-  width: 660px;
+  width: max-content;
   margin: 50px auto;
   padding: 20px;
   overflow: hidden;
@@ -26,7 +26,7 @@ body {
   position: relative;
 }
 
-#bag1, #bag2, #bag3 {
+.slot {
   position: absolute;
   left: 0;
   right: 0;
@@ -44,7 +44,7 @@ body {
   font-size: 0;
 }
 
-#wrapp {
+#btn-wrap {
   position: relative;
   height: 150px;
 }
@@ -72,6 +72,11 @@ button:focus {
   animation-duration: 700ms;
   animation-iteration-count: infinite;
   animation-timing-function: linear;
+}
+
+#sub-holder1 {
+  position: absolute;
+  left: 15%;
 }
 
 @keyframes spin {

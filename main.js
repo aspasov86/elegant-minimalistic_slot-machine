@@ -1,147 +1,129 @@
-var bag1 = $('#bag1');
-var bag2 = $('#bag2');
-var bag3 = $('#bag3');
-var symbols = ["img/dog.png", "img/heart.png", "img/ice-cream.png", "img/leaf.png", "img/lightning.png", "img/paw.png", "img/pencil.png", "img/star.png"];
+const Symbols = [
+  "img/heart.png", "img/lightning.png", "img/star.png", "img/dog.png",
+  "img/ice-cream.png", "img/leaf.png", "img/paw.png", "img/pencil.png"
+];
 
-//Imgs array which contains the images for each of the three wheels
-var Imgs = [[], [], []];
-defaultImgs(Imgs[0]);
-defaultImgs(Imgs[1]);
-defaultImgs(Imgs[2]);
+const RESULT_PLACE_NUM = 3;
+const IMAGES_PER_TRACK = 26;
+const VISIBLE_ROWS_NUM = 3;
 
-//counter variable for randomizeImgs()
-var counter = 0;
+const Slots = $('.slot')
+// Array which contains the images for each of the slots
+const Images = new Array(Slots.length).fill([]).map(getDefaultImages)
+// Audio effects for the slots
+const audioElements = Slots.map(() => new Audio('audio/spin.wav'))
 
-var x = 0;
+const spinDuration = new Promise((resolve) => {
+  $(audioElements[0]).on('loadedmetadata', function () {
+    resolve(Math.round(audioElements[0].duration) * 1000)
+  })
+})
 
-//randomizing and adding images to html (#bags)
-applyRandImgs(bag1, Imgs[0], 23);
-applyRandImgs(bag2, Imgs[1], 23);
-applyRandImgs(bag3, Imgs[2], 23);
+let isFirstSpinDone = false;
 
-console.log(Imgs);
+// Randomizing and adding images to html (.slot)
+Slots.each(function(index) {
+  applyRandomImages($(this), Images[index], IMAGES_PER_TRACK - VISIBLE_ROWS_NUM);
+})
 
-$('#btn').on("click", slotMachine);
-console.log(Imgs);
+$('#btn').on("click", startSlotMachine);
 
-function slotMachine() {
-  //remove event listener
-  $(this).off("click");
-  //spinner button animation
+async function startSlotMachine() {
+  $(this).prop('disabled', true);
+
   $('#wheel').addClass("spin");
-  //audio effects for the wheels
-  var audioElement1 = document.createElement('audio');
-  var audioElement2 = document.createElement('audio');
-  var audioElement3 = document.createElement('audio');
-  audioElement1.setAttribute('src', 'audio/holder1.wav');
-  audioElement2.setAttribute('src', 'audio/holder2.wav');
-  audioElement3.setAttribute('src', 'audio/holder3.wav');
-  audioElement1.play();
-  //the wheels will physically stop at the same spot every time
-  //reset function is there in order to get it to the starting point again
-  reset(bag1);
-  reset(bag2);
-  reset(bag3);
-  if (x > 0) {
-    applyRandImgs(bag1, Imgs[0], 23);
-    applyRandImgs(bag2, Imgs[1], 23);
-    applyRandImgs(bag3, Imgs[2], 23);
-  }
-  //spining the wheels one by one
-  spin(bag1);
-  setTimeout(function() {
-    audioElement2.play();
-    spin(bag2);
-  }, 1000)
-  setTimeout(function() {
-    audioElement3.play();
-    spin(bag3);
-  }, 2000)
-  setTimeout(function() {
-    $('#wheel').removeClass("spin");
-    //returning the event listener
-    $(this).on("click", slotMachine);
-    //check results
-    console.log($('.result').eq(0).attr("src"));
-    console.log($('.result').eq(1).attr("src"));
-    console.log($('.result').eq(2).attr("src"));
 
-    x++;
-  }, 7000)
+  Slots.each(function() {
+    reset($(this))
+  })
+
+  if (isFirstSpinDone) {
+    Slots.each(function(index) {
+      applyRandomImages($(this), Images[index], IMAGES_PER_TRACK - VISIBLE_ROWS_NUM);
+    })
+  }
+
+  Slots.each(function(index) {
+    setTimeout(() => {
+      spin($(this))
+      audioElements[index].play()
+    }, index * 1000)
+  })
+
+  setTimeout(() => {
+    $('#wheel').removeClass("spin");
+    $(this).prop('disabled', false);
+    //check results
+    const result = []
+    $('.result').each(function() {
+      const imgPath = $(this).eq(0).attr("src")
+      const match = imgPath.match(/\/([^.\/]+)\.png$/)
+      result.push(match[1].toUpperCase())
+    })
+    console.log('result', result)
+
+    isFirstSpinDone = true;
+  }, await spinDuration + (Slots.length - 1) * 1000)
 }
 
-function defaultImgs(array) {
-  array[23] = "img/heart.png";
-  array[24] = "img/lightning.png";
-  array[25] = "img/star.png";
-  console.log(array);
+function getDefaultImages() {
+  const imgsArray = []
+  for (let index = IMAGES_PER_TRACK - 1; index < IMAGES_PER_TRACK; index--) {
+    if (index < IMAGES_PER_TRACK - VISIBLE_ROWS_NUM) break;
+    imgsArray[index] = Symbols[IMAGES_PER_TRACK - 1 - index]
+  }
+  return imgsArray;
 }
 
 function reset(element) {
   element.css({
-    left: "0",
-    right: "0",
     top: "-3805px"
   })
 }
 
 function spin(element) {
   element.animate({
-    top: "-380px"
+    top: "-390px"
   }, 5000)
 }
 
-function randomizeImgs(array, num) {
-  let random = Math.floor(Math.random()*8);
-  if (counter < num) {
-    if (array.length < 1) {
-      array[counter] = symbols[random];
-      counter++;
-    } else if (array[counter-1] != symbols[random]) {
-      if (array.length < 2) {
-        array[counter] = symbols[random];
-        counter++;
-      } else if (array[counter-2] != symbols[random]) {
-        array[counter] = symbols[random];
-        counter++;
-      } else {
-        randomizeImgs(array, num);
-      }
-    } else {
-      randomizeImgs(array, num);
-    }
-    randomizeImgs(array, num);
+function getRandomNum(exceptNumArr) {
+  let rand = Math.floor(Math.random() * Symbols.length);
+  if (exceptNumArr.includes(rand)) {
+    rand = getRandomNum(exceptNumArr);
+  }
+  return rand;
+}
+
+function randomizeImages(imagesArr, endIndexNum) {
+  const randoms = [];
+  for (let index = 0; index < endIndexNum; index++) {
+    const random = getRandomNum(randoms.slice(-2));
+    randoms.push(random);
+    imagesArr[index] = Symbols[random];
   }
 }
 
-function applyRandImgs(element, array, num) {
-  //leaving the 9 symbols on the screen for the second spin while rendomizing others
-  if (array[2] != undefined) {
-    array[23] = array[2];
-    array[24] = array[3];
-    array[25] = array[4];
+function addImagesToDOM(element, imagesArr) {
+  const fragment = $(document.createDocumentFragment());
+  for (let i = 0; i < imagesArr.length; i++) {
+    const img = $('<img>', { src: imagesArr[i] })
+    if (i === RESULT_PLACE_NUM) img.addClass('result');
+    fragment.append(img);
   }
-
-  randomizeImgs(array, num);
-  //resetting the counter
-  counter = 0;
-
-  let text = "";
-  for (let i = 0; i < array.length; i++) {
-    if (i != 3) {
-      text += '<img src="'+ array[i] +'">';
-    } else {
-      text += '<img class="result" src="'+ array[i] +'">';
-    }
-  }
-  element.html(text);
+  element.empty().append(fragment);
 }
 
+function leaveVisibleSymbols(imagesArr, startIndex) {
+  if (imagesArr[RESULT_PLACE_NUM] !== undefined) {
+    for (let index = startIndex; index <= imagesArr.length - 1; index++) {
+      imagesArr[index] = imagesArr[index - startIndex + RESULT_PLACE_NUM - 1]
+    }
+  }
+}
 
-//win multiplier animation
-// $('#multi').animate({
-//   left: "14%",
-//   top: "-15%",
-//   fontSize: '360px',
-//   opacity: "0"
-// }, 2000).
+function applyRandomImages(element, imagesArr, endIndexNum) {
+  leaveVisibleSymbols(imagesArr, endIndexNum);
+  randomizeImages(imagesArr, endIndexNum);
+  addImagesToDOM(element, imagesArr);
+}
